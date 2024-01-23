@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<HEAD>
+        <style>
+            .titre {
+			font: 200% sans-serif; 
+			text-shadow:#ff006e 2.5px 2.5px 0, #8338ec 5px 5px 0, #3a86ff 7.5px 7.5px 0,#333 10px 10px 10px;color:#ffcc00;
+ 			background-color:#D8BFD8;
+				}
+                .alert {
+			padding: 20px;
+			background-color: #D8BFD8; 
+			color: #8A2BE2;
+			margin-bottom: 15px;
+				}
+
+        </style>
+		<meta charset="utf-8" />
+        <TITLE  >Connexion</TITLE>
+    </HEAD>
+    <BODY>
+        <center><h2 class="titre">Connexion</h2></center>
+
+        <center>
+            <form method="post">
+                <div>
+                <label  for="username">&emsp;Identifiant:</label>
+                <input type="text" id="username" name="username">
+                </div>
+
+                <br>
+        
+                <div>
+                <label for="pass">Mot de passe:</label>
+                <input type="password" id="pass" name="password"
+                    minlength="8" required>
+                </div>
+                <br> 
+
+                <br>
+
+                <input type="submit"  name="submit" value="Valider">
+            </form>
+
+        </center>
+        
+        <div class='alert'>
+        <?php
+        // Je me connecte à la base de données.
+
+        $con = mysqli_connect('localhost', 'root', '') or die (mysqli_error());
+           mysqli_select_db($con,'bdd') or die (mysqli_error($con));
+
+           /*
+           // pour l'affichage des valeurs dans le champ
+           if( isset($_POST['username']) )
+           {
+           echo "Vous avez insérer ". $_POST['username'] ."  <br>";    }
+           if(isset($_POST['password']))
+           {
+            echo  $_POST['password'] ."<br>";
+           }
+           */
+           
+
+        //dès que le champ pass et pass2 sont remplis
+        //et pour ne pas voir afficher le message d'erreur: /!\ Undefined array key "pass"
+        if(isset($_POST['username']) && isset($_POST['password']))
+        {
+            // Je mets aussi certaines sécurités pour l'envoie du mot de passe à la BDD ici…
+            $pass = mysqli_real_escape_string($con, $_POST['password']);
+            // Je vais crypter le mot de passe.
+            $pass = sha1($pass);
+                // Si le mot de passe est confirmé
+                //et qu'il clique sur submit 
+                
+                $pseudo =  mysqli_real_escape_string($con, $_POST['username']);   
+                //Je me reconnecte à nouveau      
+                $con = new PDO("mysql:host=localhost; dbname=bdd", "root", "");               
+                $req = $con->query("SELECT * FROM validation WHERE pseudo = '". $pseudo ."' ");
+                echo "En cours de recherche.";
+
+                //je déclare une chaine de caractère html
+                // un attribut d'un champ pour le cacher le message mot de passe et pseudo non corrects
+                $hide= " ";
+                while ($resultat = $req->fetch() )
+                {
+                    echo '.';
+                    if ($resultat['pseudo']== $pseudo && $resultat['passe']== $pass)
+                    {
+                        echo "Le pseudo est confirmé. <br>";
+                        echo "Le mot de passe est confirmé. <br>";
+                        echo " Connexion!<br>";
+                        $hide= "style='display: none'";
+                        //ouverture de session
+                        session_start ();
+                        $_SESSION['logged'] = $_POST['username'];
+                        //0 si utilisateur simple, 1 si administrateur
+                        $_SESSION['admin'] = $resultat['admin'];
+                        echo " ADMINISTRATEUR? ". $_SESSION['admin'];
+                        //temps de début de session
+                        $_SESSION['debut'] = time();
+                        //ça va ouvrir index.html mais en mode utilisateur
+                        header ('location: index.html');
+                        break;
+                    }  
+                }
+                //s'affiche si erreur, sinon le champ est caché
+                echo "<div $hide >Le pseudo ou le mot de passe ne sont pas corrects, réessayez. </div>";
+        }
+        ?>
+    </div>
+            
